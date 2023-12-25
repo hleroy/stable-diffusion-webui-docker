@@ -1,0 +1,86 @@
+version: '3.8'
+name: stable-diffusion-webui
+
+services:
+  download:
+    build: ./services/download/
+    profiles: [ "download" ]
+    volumes:
+      - data:/data
+
+  webui: &webui-gpu
+    profiles: [ "cloud" ]
+    build: ./services/webui
+    image: webui
+    stop_signal: SIGKILL
+    tty: true
+    expose:
+      - 7860
+    environment:
+      - CLI_ARGS=--allow-code --xformers --enable-insecure-extension-access --api
+      - VIRTUAL_HOST
+      - VIRTUAL_PORT
+      - LETSENCRYPT_HOST
+      - LETSENCRYPT_EMAIL
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ compute, utility ]
+    volumes:
+      - data:/data
+
+  webui-cpu:
+    profiles: [ "local" ]
+    <<: *webui-gpu
+    deploy: {}
+    environment:
+      - CLI_ARGS=--no-half --precision full --allow-code --enable-insecure-extension-access --api
+    ports:
+      - 7860:7860
+
+  nginx:
+    profiles: [ "cloud" ]
+    image: jwilder/nginx-proxy:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs:ro
+      - vhost:/etc/nginx/vhost.d:rw
+      - dhparam:/etc/nginx/dhparam
+      - conf:/etc/nginx/conf.d
+      - html:/usr/share/nginx/html:rw
+      - ".htpasswd:/etc/nginx/htpasswd/${VIRTUAL_HOST}"
+    depends_on:
+      - webui
+
+  letsencrypt:
+    profiles: [ "cloud" ]
+    image: jrcs/letsencrypt-nginx-proxy-companion:latest
+    container_name: letsencrypt
+    restart: unless-stopped
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/etc/acme.sh
+      - certs:/etc/nginx/certs:rw
+      - vhost:/etc/nginx/vhost.d:rw
+      - html:/usr/share/nginx/html:rw
+    depends_on:
+      - nginx
+
+volumes:
+  data:
+  acme:
+  certs:
+  conf:
+  vhost:
+  dhparam:
+  html:
