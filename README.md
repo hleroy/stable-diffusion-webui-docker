@@ -34,6 +34,8 @@ LETSENCRYPT_HOST=sd.yourdomain.com
 LETSENCRYPT_EMAIL=username@yourdomain.com
 ```
 
+Before proceeding, ensure that your DNS settings are correctly configured to point your domain (e.g., sd.yourdomain.com) to the IP address of your cloud server. This step is crucial for Let's Encrypt to verify your domain and issue a SSL certificate.
+
 Create `.htpasswd` file to setup HTTP basic auth to protect the Web UI:
 
     $ htpasswd -c .htpasswd username
