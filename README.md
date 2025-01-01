@@ -1,15 +1,12 @@
-stable-diffusion-webui-docker
-=============================
+# stable-diffusion-webui-docker
 
-Stable Diffusion WebUI running either locally (CPU-only) or behind a Nginx reverse proxy with Let's Encrypt (ideal for installing on a headless GPU server).
+**Stable Diffusion WebUI** running either locally (CPU or GPU) or behind a Nginx reverse proxy with Let's Encrypt (ideal for installing on a headless GPU server).
 
-It installs AUTOMATIC111 Web UI v1.7 with xformers enabled. The default model installed is Stable Diffusion 1.5. The initial build is quite long (4-5 minutes) even on a powerful server. Subsequent launch will take a few seconds.
+It installs Stable Diffusion WebUI with xformers enabled. The default model installed is Stable Diffusion 1.5. The initial build is quite long (4-5 minutes) even on a powerful server. Subsequent launch will take a few seconds.
 
-It's up to you  to install additional models, LoRa, VAE, etc.
+It's up to you to install additional models, LoRa, VAE, etc.
 
-
-Running locally (CPU only)
---------------------------
+## Running locally (CPU only)
 
 After cloning the repository, run:
 
@@ -17,13 +14,25 @@ After cloning the repository, run:
     $ docker compose --profile download up --build
 
     # Start WebUI
-    $ docker compose --profile local up --build
+    $ docker compose --profile local-cpu up --build
 
 Access from http://localhost:7860/
 
+## Running locally (GPU-enabled)
 
-Running in the cloud (GPU server)
----------------------------------
+Ensure your system has NVIDIA Docker Toolkit installed and configured for Docker to access the GPU.
+
+After cloning the repository, run:
+
+    # Initial download of models (run once)
+    $ docker compose --profile download up --build
+
+    # Start WebUI with GPU support
+    $ docker compose --profile local-gpu up --build
+
+Access from http://localhost:7860/
+
+## Running in the cloud (GPU server)
 
 After cloning the repository, create `.env` file and customize with your own domain and email:
 
@@ -60,11 +69,26 @@ If you have any issue, you can check the logs:
 
     $ docker compose logs -tf
 
+## Persistent Storage
 
-Credits
--------
+### Data Volume
+
+All persistent data including models, extensions, and settings are stored in a Docker volume named `data`. This ensures your configurations and installed components persist across container restarts and updates.
+
+### Local Output Directory
+
+Generated content (images, etc.) is stored in a local `outputs` directory, which is mapped to the container. This makes it easy to access and manage your generated content from your host system.
+
+## Notes
+
+Compatibility matrix for PyTorch
+
+    https://github.com/pytorch/pytorch/wiki/PyTorch-Versions
+
+## Credits
 
 Thanks to:
+
 - [Stability.ai](https://stability.ai/) for the fairly open image diffusion model
 - [AUTOMATIC1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) for the WebUI
 - [AbdBarho](https://github.com/AbdBarho/stable-diffusion-webui-docker/) for the download container idea

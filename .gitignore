@@ -1,2 +1,4 @@
 .htpasswd
 .env
+/outputs/*
+!/outputs/.gitkeep

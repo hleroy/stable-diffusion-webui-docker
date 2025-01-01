@@ -1,5 +1,15 @@
-version: '3.8'
 name: stable-diffusion-webui
+
+x-webui-base: &webui-base
+  build: ./services/webui/
+  image: webui
+  stop_signal: SIGKILL
+  tty: true
+  environment:
+    - CLI_ARGS=--allow-code --xformers --enable-insecure-extension-access --api
+  volumes:
+    - data:/data
+    - ./outputs:/workspace/stable-diffusion-webui/outputs
 
 services:
   download:
@@ -8,16 +18,12 @@ services:
     volumes:
       - data:/data
 
-  webui: &webui-gpu
+  webui-cloud:
+    <<: *webui-base
     profiles: [ "cloud" ]
-    build: ./services/webui
-    image: webui
-    stop_signal: SIGKILL
-    tty: true
     expose:
       - 7860
     environment:
-      - CLI_ARGS=--allow-code --xformers --enable-insecure-extension-access --api
       - VIRTUAL_HOST
       - VIRTUAL_PORT
       - LETSENCRYPT_HOST
@@ -29,17 +35,27 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [ compute, utility ]
-    volumes:
-      - data:/data
 
-  webui-cpu:
-    profiles: [ "local" ]
-    <<: *webui-gpu
-    deploy: {}
-    environment:
-      - CLI_ARGS=--no-half --precision full --allow-code --enable-insecure-extension-access --api
+  webui-local-gpu:
+    <<: *webui-base
+    profiles: [ "local-gpu" ]
     ports:
       - 7860:7860
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+
+  webui-local-cpu:
+    <<: *webui-base
+    profiles: [ "local-cpu" ]
+    ports:
+      - 7860:7860
+    environment:
+      - CLI_ARGS=--no-half --precision full --allow-code --enable-insecure-extension-access --api
 
   nginx:
     profiles: [ "cloud" ]
@@ -58,7 +74,7 @@ services:
       - html:/usr/share/nginx/html:rw
       - ".htpasswd:/etc/nginx/htpasswd/${VIRTUAL_HOST}"
     depends_on:
-      - webui
+      - webui-cloud
 
   letsencrypt:
     profiles: [ "cloud" ]
