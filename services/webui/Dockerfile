@@ -4,11 +4,11 @@ ENV DEBIAN_FRONTEND noninteractive PIP_PREFER_BINARY=1
 # Install necessary packages
 RUN --mount=type=cache,target=/var/cache/apt \
     apt update -y && apt upgrade -y && \
-    apt install -y wget git python3 python3-pip libgl1 libglib2.0-0 sudo
+    apt install -y wget git python3 python3-pip libgl1 libglib2.0-0 libtcmalloc-minimal4
 
-# Clone latest Stable Diffusion Web UI (v1.10.1) from its official repository and install requirements
+# Clone latest Stable Diffusion Web UI (dev branch) from its official repository and install requirements
 RUN --mount=type=cache,target=/root/.cache/pip \
-    git clone --depth 1 -b v1.10.1 https://github.com/AUTOMATIC1111/stable-diffusion-webui.git && \
+    git clone --depth 1 -b dev https://github.com/AUTOMATIC1111/stable-diffusion-webui.git && \
     cd stable-diffusion-webui && \
     pip install -r requirements.txt
 
@@ -26,10 +26,12 @@ RUN python3 -u launch.py --skip-torch-cuda-test --exit
 
 # Additional requirements for common extensions
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install rich fake_useragent send2trash ultralytics onnx onnx_graphsurgeon polygraphy dynamicprompts optimum colorama tensorrt
+    pip install rich fake_useragent send2trash ultralytics onnx onnx_graphsurgeon polygraphy dynamicprompts optimum \
+    colorama basicsr simplejson wget clip_interrogator slugify mediapipe controlnet_aux open-clip-torch==2.24.0
 
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV CLI_ARGS=""
+ENV CUDA_HOME=/usr/local/cuda
 
 EXPOSE 7860
 
@@ -40,4 +42,3 @@ ENTRYPOINT ["/docker/entrypoint.sh"]
 
 # Run WebUI
 CMD python3 -u webui.py --skip-install --listen --port 7860 ${CLI_ARGS}
-#CMD ["tail", "-f", "/dev/null"]

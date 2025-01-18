@@ -3,6 +3,9 @@
 # Set bash options for robust error handling
 set -Eeuo pipefail
 
+# Set tcmalloc as the default memory allocator
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+
 echo $ROOT
 ls -lha $ROOT
 
