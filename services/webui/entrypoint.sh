@@ -9,6 +9,16 @@ export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 echo $ROOT
 ls -lha $ROOT
 
+# Set permissive umask for new files and directories
+# 000 will result in:
+# - new files: 666 (rw-rw-rw-)
+# - new directories: 777 (rwxrwxrwx)
+umask 000
+
+# Create outputs directory and set permissions
+mkdir -p "${ROOT}/outputs"
+chmod 777 "${ROOT}/outputs"
+
 # Create the /data/config/auto directory if it doesn't exist
 mkdir -vp /data/config/auto
 
@@ -49,5 +59,5 @@ for to_path in "${!MOUNTS[@]}"; do
   echo Mounted $(basename "${from_path}")
 done
 
-# Execute the command passed to the script
-exec "$@"
+# Execute the command passed to the script with additional CLI arguments
+exec "$@" ${CLI_ARGS}

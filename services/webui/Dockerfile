@@ -1,5 +1,5 @@
 FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime
-ENV DEBIAN_FRONTEND noninteractive PIP_PREFER_BINARY=1
+ENV DEBIAN_FRONTEND=noninteractive PIP_PREFER_BINARY=1
 
 # Install necessary packages
 RUN --mount=type=cache,target=/var/cache/apt \
@@ -27,7 +27,8 @@ RUN python3 -u launch.py --skip-torch-cuda-test --exit
 # Additional requirements for common extensions
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install rich fake_useragent send2trash ultralytics onnx onnx_graphsurgeon polygraphy dynamicprompts optimum \
-    colorama basicsr simplejson wget clip_interrogator slugify mediapipe controlnet_aux open-clip-torch==2.24.0
+    colorama basicsr simplejson wget clip_interrogator slugify mediapipe controlnet_aux open-clip-torch==2.24.0 \
+    ZipUnicode
 
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV CLI_ARGS=""
@@ -41,4 +42,4 @@ RUN chmod +x /docker/entrypoint.sh
 ENTRYPOINT ["/docker/entrypoint.sh"]
 
 # Run WebUI
-CMD python3 -u webui.py --skip-install --listen --port 7860 ${CLI_ARGS}
+CMD ["python3", "-u", "webui.py", "--skip-install", "--listen", "--port", "7860"]

@@ -72,7 +72,7 @@ services:
       - dhparam:/etc/nginx/dhparam
       - conf:/etc/nginx/conf.d
       - html:/usr/share/nginx/html:rw
-      - ".htpasswd:/etc/nginx/htpasswd/${VIRTUAL_HOST}"
+      - ".htpasswd:/etc/nginx/htpasswd/${VIRTUAL_HOST:-localhost}"
     depends_on:
       - webui-cloud
 
